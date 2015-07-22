@@ -1,0 +1,93 @@
+#!perl
+
+# DATE
+# VERSION
+
+#use 5.010;
+use strict;
+use warnings;
+
+# bad codes?
+#use Color::ANSI::Util qw(ansi256fg ansi256bg);
+#
+#my @pastel_rgbs = (
+#    "000000", # 0 black
+#    "f15f74", # 1 red
+#    "98cb4a", # 2 green
+#    "f7d842", # 3 yellow
+#    "2ca8c2", # 4 blue
+#    "913ccd", # 5 magenta
+#    "2ca8c2", # 6 cyan
+#    "839098", # 7 white (gray)
+#);
+#my @pastel_ansifgs = map {
+#    my ($code) = ansi256fg($_) =~ /\e\[(.+)m/;
+#    [split /;/, $code];
+#} @pastel_rgbs;
+#my @pastel_ansibgs = map {
+#    my ($code) = ansi256bg($_) =~ /\e\[(.+)m/;
+#    [split /;/, $code];
+#} @pastel_rgbs;
+#use DD; dd \@pastel_ansifgs; # DEBUG
+
+my @pastel_ansifgs = (
+    [38, 5,   0], # 0 black
+    [38, 5, 203], # 1 red
+    [38, 5, 113], # 2 green
+    [38, 5, 192], # 3 yellow
+    [38, 5,  69], # 4 blue
+    [38, 5, 104], # 5 magenta
+    [38, 5,  74], # 6 cyan
+    [38, 5, 246], # 7 white (gray)
+);
+
+my @pastel_ansibgs = map { [48, 5, $_->[2]] } @pastel_ansifgs;
+
+sub _pastel {
+    my @codes = split /;/, shift;
+    my $code = $codes[0];
+    if ($code >= 30 && $code <= 37) {
+        @codes = @{ $pastel_ansifgs[$code-30] };
+    } elsif ($code >= 40 && $code <= 47) {
+        @codes = @{ $pastel_ansibgs[$code-40] };
+    }
+    join ";", @codes;
+}
+
+if (grep {$_ eq '--help'} @ARGV) {
+    print <<'EOF';
+pastel - Pastelize colors for terminal
+
+Usage:
+  % command-that-produces-colored-output | pastel
+
+EOF
+    exit 0;
+} else {
+    while (<STDIN>) {
+        s/\e\[(.+?)m/"\e[" . _pastel($1) . "m"/eg;
+        #use DD; dd $_; # DEBUG
+        print;
+    }
+}
+
+1;
+# ABSTRACT: Pastelize colors for terminal
+# PODNAME: pastel
+
+=head1 SYNOPSIS
+
+Usage:
+
+ % command-that-produces-colored-output | pastel
+
+
+=head1 DESCRIPTION
+
+This utility reads ANSI color codes in STDIN and replaces the basic 8-color
+codes to 256-color pastel version of those codes.
+
+
+=head1 SEE ALSO
+
+L<Color::ANSI::Util>
